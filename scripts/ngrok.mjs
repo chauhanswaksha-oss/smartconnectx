@@ -1,12 +1,12 @@
-import path from 'node:path';
+import { loadLocalEnvironment } from './load-env.mjs';
 import ngrok from '@ngrok/ngrok';
 import { createStaticServer, projectDirectory, runtimeOptions } from '../server.mjs';
 
-try { process.loadEnvFile(path.join(projectDirectory, '.env')); }
-catch (error) { if (error.code !== 'ENOENT') { console.error('Could not read .env. Check its permissions and format.'); process.exit(1); } }
+try { loadLocalEnvironment(projectDirectory); }
+catch (error) { if (error.code !== 'ENOENT') { console.error('Could not read the token file. Check its permissions and format.'); process.exit(1); } }
 const token = process.env.NGROK_AUTHTOKEN?.trim();
 if (!token) {
-  console.error('Add NGROK_AUTHTOKEN to your private .env file, then run npm run share again.');
+  console.error('Add NGROK_AUTHTOKEN to your private .env, .env.text, or .env.txt file, then run npm run share again.');
   console.error('Get your token from https://dashboard.ngrok.com/get-started/your-authtoken');
   process.exit(1);
 }
