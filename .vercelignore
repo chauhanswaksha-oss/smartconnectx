@@ -1,0 +1,11 @@
+.git
+.github
+.vercel
+node_modules
+dist
+.env*
+*.log
+server.mjs
+scripts
+tests
+START-HERE.md

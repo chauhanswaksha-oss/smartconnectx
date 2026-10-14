@@ -69,3 +69,9 @@ If the official ngrok CLI is already authenticated, you can instead run `npm sta
 The ngrok launcher was verified for missing-token handling. A live tunnel could not be created in this cloud: its mandatory proxy rejects ngrok's control transport with `TLSV1_ALERT_NO_APPLICATION_PROTOCOL` and closes the authentication stream, even with the official CLI proxy configuration and system certificate verification. Run the downloaded package on a computer or host whose network supports ngrok. Other networks using an HTTP proxy can use the official ngrok CLI's supported `proxy_url` configuration, but that configuration did not resolve this cloud's transport limitation.
 
 If your editor saves the token file as `.env.text` or `.env.txt`, the ngrok launcher accepts those names too. It checks `.env` first. All three files are private and excluded from Git.
+
+## Vercel deployment
+
+Import `chauhanswaksha-oss/smartconnectx` from GitHub into your Vercel account, or run `vercel --prod` after logging in with the official Vercel CLI. The included `vercel.json` selects Vite, builds with `npm run build`, and serves `dist/`. No environment variables or ngrok token are required for the hosted portfolio. `.vercelignore` excludes local credential files, the ngrok launcher, and the local server from uploads.
+
+Vercel serves the site at its public HTTPS address; create profile sharing links from that address. This deploys the static portfolio builder, not a persistent account/database service.
