@@ -37,6 +37,7 @@ function render() {
   document.title = isDemo ? 'SmartConnectX · Your portfolio, one tap away' : `${profile.name} · SmartConnectX`;
   app.innerHTML = `
     <header>
+<div class="scx-live-bridge" style="margin:12px 0 0;padding:12px 16px;border:1px solid #d7e2c4;background:#eaf0dc;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px"><span><strong>SmartConnect X Live</strong> · Want one permanent NFC/QR link you can update later?</span><a href="https://screenshot-mirror-237.lovable.app/editor" target="_blank" rel="noopener noreferrer" style="background:#263321;color:#fff;border-radius:8px;padding:10px 14px;text-decoration:none;font-weight:600">Create live NFC card ↗</a></div>
       <a class="logo" href="#" aria-label="SmartConnectX home"><span>✳</span> smartconnect<span class="x">x</span></a>
       <nav aria-label="Main navigation">${profile.bio || skills.length ? '<a href="#about">About</a>' : ''}${profile.projects.length ? '<a href="#work">Selected work</a>' : ''}<a href="#contact">Contact</a></nav>
       <button class="outline" id="create-top">${icon(isDemo || isVisitor ? 'plus' : 'arrow')}${isDemo ? 'Create your portfolio' : isVisitor ? 'Create yours' : 'Edit portfolio'}</button>
