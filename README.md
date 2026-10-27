@@ -1,4 +1,4 @@
-# SmartConnect X — Cloudflare edition
+# SmartConnect X — Vercel
 
 Digital business cards with permanent public links, customer accounts, UPI checkout, and manually renewed monthly/yearly subscriptions.
 
@@ -10,18 +10,15 @@ Requires Node 22.12 or later.
 npm ci
 npm test
 npm run build
-npx wrangler deploy --dry-run
 ```
 
-`npm run dev` starts Vite. The browser build is in `dist/`. `npm run deploy:cloudflare` builds and deploys to the Cloudflare account authenticated with Wrangler. On Windows PowerShell, use `npm.cmd` / `npx.cmd` if PowerShell blocks the `.ps1` shims; no execution-policy change is necessary.
+`npm run dev` starts Vite. The browser build is in `dist/`. On Windows PowerShell, use `npm.cmd` / `npx.cmd` if PowerShell blocks the `.ps1` shims; no execution-policy change is necessary.
 
 ## Deployment
 
-This branch targets Cloudflare Workers static assets. Cloudflare Pages can also serve `dist/` with its SPA fallback. No ChatGPT Sites or Lovable hosting is required.
+Deploy to the existing SmartConnect X project on Vercel. The project configuration builds Vite and provides SPA routing for `/login`, `/account`, `/checkout`, `/admin` and `/editor`, plus security headers. Supabase supplies authentication and server-enforced data access. See [VERCEL.md](VERCEL.md) for the intended account and launch configuration.
 
-For Workers Builds, select this branch, set the build command to `npm run build` and deploy command to `npx wrangler deploy`. For manual upload, upload the contents of `dist/`, not the repository or node_modules. See [CLOUDFLARE.md](CLOUDFLARE.md) for the remaining account configuration.
-
-The existing Vercel deployment is not changed by this branch. The earlier repository code was a local-storage portfolio builder; the Cloudflare edition adds Supabase-backed accounts, profiles, orders and subscriptions while continuing to read legacy profile snapshot links.
+The current live deployment is unchanged until this branch is explicitly deployed to the existing project. The earlier repository code was a local-storage portfolio builder; this version adds Supabase-backed accounts, profiles, orders and subscriptions while continuing to read legacy profile snapshot links.
 
 ## Customer features
 
@@ -43,7 +40,7 @@ Payment confirmation is manual: match the recipient, full amount and 12-digit re
 
 ## Data and security
 
-`cloud-config.js` contains only the public Supabase URL and publishable key. Never put a service-role key, account password or Cloudflare API token in browser code.
+`cloud-config.js` contains only the public Supabase URL and publishable key. Never put a service-role key, account password or Vercel API token in browser code.
 
 Additive migrations are in `supabase/migrations/`. The existing `digital_cards` table is untouched. New `scx_*` tables use RLS. Client roles have read access according to policies, with all writes through narrow RPC functions. Each write authenticates the caller and checks ownership or an independently protected owner role. Prices, recipient details, subscription periods and payment states are server controlled. Approval is idempotent and updates payment and entitlement in one transaction. Slugs remain unchanged after creation.
 
@@ -53,4 +50,4 @@ Additive migrations are in `supabase/migrations/`. The existing `digital_cards` 
 
 `npm test` includes profile encoding/URL safety, vCard generation, static-server traversal, UPI amount/recipient validation, redirect safety, DOM checkout states, owner controls, and PostgreSQL authorization/renewal/expiry tests. Database tests use an isolated PostgreSQL WASM instance (PGlite) with a minimal Supabase Auth schema contract. All synthetic identities and test payments are rolled back. No real payment is made.
 
-Cloudflare dry-run validates the upload package but does not publish it. Actual Cloudflare account sign-in, live auth email delivery/redirect URLs, mobile browser rendering and a real UPI payment must be verified after account connection and owner setup. This repository does not claim those checks are complete.
+The production Vite build is ready for Vercel. Live deployment, email delivery, authentication redirects, mobile rendering and a real UPI payment must be verified after access to the existing project and owner setup. These checks are not claimed complete.
