@@ -6,7 +6,7 @@ export const emptyProfile = {
 };
 export const demoProfile = {
   ...emptyProfile,
-  name: 'Virat Kohli', role: 'Product designer & creative developer', email: 'alex@example.com',
+  name: 'Aarav Sharma', role: 'Product designer & creative developer', email: 'aarav@example.com',
   location: 'Bengaluru, India', headline: 'Designing moments.\nConnecting people.',
   bio: 'I turn complex ideas into thoughtful digital experiences. Blending strategy, design, and a little curiosity to create things people love to use.',
   photo: '',

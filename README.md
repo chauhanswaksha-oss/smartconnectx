@@ -1,77 +1,56 @@
-# SmartConnectX
+# SmartConnect X — Cloudflare edition
 
-A responsive, self-service personal portfolio and digital contact card. People fill in their own details, then share their portfolio with a QR code or an NFC tag.
+Digital business cards with permanent public links, customer accounts, UPI checkout, and manually renewed monthly/yearly subscriptions.
 
-## Run locally
+## Run and verify
 
-Requires Node.js 22.12+ (Node.js 24 LTS recommended).
+Requires Node 22.12 or later.
 
 ```sh
 npm ci
-npm run dev
-```
-
-## Create and share a portfolio
-
-1. Choose **Create your portfolio**.
-2. Add your name, role, story, and optional profile photo URL.
-3. Add the contact details and social links you want to make public.
-4. Add up to three projects, or continue without any.
-5. Copy your portfolio link or download its QR code from the share screen.
-
-A shared link contains a compressed snapshot of the profile. It opens the same profile in a fresh browser, without an account or backend. The owner's editable profile is also saved in their browser when storage is available. A visitor can create their own portfolio without overwriting the shared one.
-
-To update a shared portfolio, edit it and distribute the new link or QR code. Existing links preserve the earlier snapshot. All details included in a link are visible to anyone who has that link; include only contact information intended for sharing.
-
-## NFC
-
-Deploy the site at a public address first. Copy the complete portfolio link into a URL / web link record using an NFC writer app, then write it to a compatible NFC tag. Check the tag's storage capacity: links containing profile information can exceed small tags. Test the QR code and NFC tag with another phone. Programming physical NFC tags is done with the phone's writer app, not this website.
-
-## Verify and deploy
-
-```sh
 npm test
 npm run build
-npm run preview
+npx wrangler deploy --dry-run
 ```
 
-Deploy `dist/` to any static HTTPS hosting provider. No server, database, or secret keys are needed. Generate shared links from the deployed site so they use its public address. The welcome page contains clearly labeled sample content, which is replaced when a person creates their portfolio.
+`npm run dev` starts Vite. The browser build is in `dist/`. `npm run deploy:cloudflare` builds and deploys to the Cloudflare account authenticated with Wrangler. On Windows PowerShell, use `npm.cmd` / `npx.cmd` if PowerShell blocks the `.ps1` shims; no execution-policy change is necessary.
 
-Contact downloads use Unicode-safe vCards with folded lines. QR images are generated locally with a quiet margin and high-resolution export. Fonts are bundled locally; optional profile image URLs must be publicly accessible HTTP(S) images. Failed image loads fall back to the person's initials.
+## Deployment
 
-There is no account system, cloud synchronization, or permanent short-link service. A shared portfolio is a snapshot rather than an automatically updating hosted profile.
+This branch targets Cloudflare Workers static assets. Cloudflare Pages can also serve `dist/` with its SPA fallback. No ChatGPT Sites or Lovable hosting is required.
 
-## GitHub Pages deployment
+For Workers Builds, select this branch, set the build command to `npm run build` and deploy command to `npx wrangler deploy`. For manual upload, upload the contents of `dist/`, not the repository or node_modules. See [CLOUDFLARE.md](CLOUDFLARE.md) for the remaining account configuration.
 
-The included `.github/workflows/deploy-pages.yml` tests, builds, and deploys the site after a push to `main`. In this repository's **Settings → Pages**, select **GitHub Actions** as the build source. Publishing requires an account with repository write access and permission to configure Pages.
+The existing Vercel deployment is not changed by this branch. The earlier repository code was a local-storage portfolio builder; the Cloudflare edition adds Supabase-backed accounts, profiles, orders and subscriptions while continuing to read legacy profile snapshot links.
 
-The workflow builds with `--base=/smartconnectx/` for the repository's project path. Change that base if the repository is renamed or you use a custom domain.
+## Customer features
 
-For a manual deployment to another static host, run `npm run build -- --base=./` and upload the contents of `dist/`.
+- Email/password signup, sign-in and password reset using Supabase Auth.
+- Free: one saved digital card. Pro: create up to five cards during the paid period.
+- Permanent card addresses, editable details, public/private toggle, QR sharing and vCard downloads.
+- Monthly and yearly UPI checkout, payment-reference submission, order history and support requests.
+- Pro starts only after an owner verifies payment. Renewal extends the existing access end date.
+- There is no automatic debit, gateway settlement verification or UPI AutoPay mandate.
+- Existing cards remain editable and available when Pro expires. Creating additional cards is blocked by the database after expiry.
 
-## Local server and ngrok
+## Owner features
 
-A built-in Node server serves only `dist/`. Run `npm run build` and `npm start` to use it locally at port 3000. `/healthz` reports readiness. `PORT` changes the port, and `HOST` changes the bind address. The default bind is loopback; ngrok forwards to this server.
+`/admin` requires an explicitly provisioned owner identity. Ordinary customers cannot grant themselves owner access. Owners configure the receiving UPI ID, merchant name and prices, review payments, and reply to support requests.
 
-To share with a phone:
+Checkout starts disabled, and no receiving UPI ID is hardcoded. Initial editable catalog prices are ₹99/month and ₹499/year. Opening checkout requires the owner to confirm the receiving UPI ID and prices.
 
-1. Install Node.js 22.12+ on the computer or server that will stay running.
-2. Run `npm ci` from this project's directory.
-3. Copy `.env.example` to `.env` and privately set `NGROK_AUTHTOKEN` to your own current ngrok token. `.env` is ignored and must never be shared.
-4. Run `npm run build` if using the source checkout. The downloadable server ZIP includes a prebuilt `dist/`.
-5. Run `npm run share`. It starts the local server and connects using the official ngrok Node SDK.
-6. Open the printed public HTTPS link on your phone. Create the portfolio from that address so QR/NFC links use the public origin.
+Payment confirmation is manual: match the recipient, full amount and 12-digit reference in the receiving bank/UPI app before approving. Submitting a reference is not proof of payment. The website records refund requests; it does not issue bank refunds.
 
-Keep the computer and terminal running. Ctrl+C closes both the server and tunnel. Tunnel links are temporary; use a stable hosting address or an ngrok domain for long-lived NFC cards. Rotate any token that was pasted into chat before using it.
+## Data and security
 
-If the official ngrok CLI is already authenticated, you can instead run `npm start`, then run `ngrok http http://localhost:3000` in another terminal. The Node server accepts ngrok's host header without disabling Vite host checks or exposing development source files.
+`cloud-config.js` contains only the public Supabase URL and publishable key. Never put a service-role key, account password or Cloudflare API token in browser code.
 
-The ngrok launcher was verified for missing-token handling. A live tunnel could not be created in this cloud: its mandatory proxy rejects ngrok's control transport with `TLSV1_ALERT_NO_APPLICATION_PROTOCOL` and closes the authentication stream, even with the official CLI proxy configuration and system certificate verification. Run the downloaded package on a computer or host whose network supports ngrok. Other networks using an HTTP proxy can use the official ngrok CLI's supported `proxy_url` configuration, but that configuration did not resolve this cloud's transport limitation.
+Additive migrations are in `supabase/migrations/`. The existing `digital_cards` table is untouched. New `scx_*` tables use RLS. Client roles have read access according to policies, with all writes through narrow RPC functions. Each write authenticates the caller and checks ownership or an independently protected owner role. Prices, recipient details, subscription periods and payment states are server controlled. Approval is idempotent and updates payment and entitlement in one transaction. Slugs remain unchanged after creation.
 
-If your editor saves the token file as `.env.text` or `.env.txt`, the ngrok launcher accepts those names too. It checks `.env` first. All three files are private and excluded from Git.
+`scx_private.admins` and `scx_private.audit` intentionally have no client RLS policies. The security-definer write functions intentionally execute with limited client grants and explicit authorization checks. Supabase Advisor flags these callable functions for review; this is an intentional RPC boundary, not blanket client access to the tables.
 
-## Vercel deployment
+## Test coverage and limits
 
-Import `chauhanswaksha-oss/smartconnectx` from GitHub into your Vercel account, or run `vercel --prod` after logging in with the official Vercel CLI. The included `vercel.json` selects Vite, builds with `npm run build`, and serves `dist/`. No environment variables or ngrok token are required for the hosted portfolio. `.vercelignore` excludes local credential files, the ngrok launcher, and the local server from uploads.
+`npm test` includes profile encoding/URL safety, vCard generation, static-server traversal, UPI amount/recipient validation, redirect safety, DOM checkout states, owner controls, and PostgreSQL authorization/renewal/expiry tests. Database tests use an isolated PostgreSQL WASM instance (PGlite) with a minimal Supabase Auth schema contract. All synthetic identities and test payments are rolled back. No real payment is made.
 
-Vercel serves the site at its public HTTPS address; create profile sharing links from that address. This deploys the static portfolio builder, not a persistent account/database service.
+Cloudflare dry-run validates the upload package but does not publish it. Actual Cloudflare account sign-in, live auth email delivery/redirect URLs, mobile browser rendering and a real UPI payment must be verified after account connection and owner setup. This repository does not claim those checks are complete.
